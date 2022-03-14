@@ -1,8 +1,8 @@
 mod opts;
 
-use std::{io::Read, process, thread};
+use std::{io::Read, process, thread, sync::{Arc, Mutex}};
 
-use image::EncodableLayout;
+use image::{EncodableLayout, ImageBuffer, Rgba};
 use slint::{Image, Rgba8Pixel, SharedPixelBuffer, SharedString};
 use structopt::StructOpt;
 use tracing;
@@ -11,10 +11,14 @@ use tracing_subscriber::EnvFilter;
 use crate::opts::Opts;
 
 slint::slint! {
+    import { Button } from "std-widgets.slint";
+
     MainWindow := Window {
         property <bool> loading;
         property <image> display_image;
         property <string> file_name;
+
+        callback save_to_file;
 
         title: (loading ? "Loading..." : (file_name + " (" + display_image.width + "px x " + display_image.height + "px)")) + " - kiraz";
 
@@ -27,9 +31,17 @@ slint::slint! {
                 height: 768px;
                 image_fit: contain;
             }
+            HorizontalLayout {
+                Button {
+                    text: "Save to file";
+                    clicked => { save_to_file(); }
+                }
+            }
         }
     }
 }
+
+type ImageData = Arc<Mutex<Option<ImageBuffer<Rgba<u8>, Vec<u8>>>>>;
 
 /// Sets up the logging. Only call this once, at the start.
 fn setup_logging() -> () {
@@ -41,7 +53,7 @@ fn setup_logging() -> () {
     tracing::subscriber::set_global_default(subscriber).expect("Failed to set up logging");
 }
 
-fn load_image(opts: Opts, window_weak: slint::Weak<MainWindow>) -> anyhow::Result<()> {
+fn load_image(opts: Opts, window_weak: slint::Weak<MainWindow>, image_save: ImageData) -> anyhow::Result<()> {
     // Select the source for the input image
     let mut data_source: Box<dyn Read> = if let Some("-") = opts.file.to_str() {
         tracing::debug!("Reading data from stdin");
@@ -68,6 +80,8 @@ fn load_image(opts: Opts, window_weak: slint::Weak<MainWindow>) -> anyhow::Resul
         image.height(),
     );
 
+    let _ = image_save.lock().unwrap().insert(image);
+
     tracing::debug!("Image ready");
     slint::invoke_from_event_loop(move || {
         let image = Image::from_rgba8(buffer);
@@ -87,10 +101,23 @@ fn main() -> anyhow::Result<()> {
     window.set_loading(true);
     let window_weak = window.as_weak();
 
+    let image: ImageData = Arc::new(Mutex::new(None));
+    let image_clone = image.clone();
     thread::spawn(move || {
-        load_image(opts, window_weak).unwrap_or_else(|error| {
+        load_image(opts, window_weak, image_clone).unwrap_or_else(|error| {
             tracing::error!("Failed to load the image: {:?}", error);
             process::exit(1);
+        });
+    });
+
+    window.on_save_to_file(move || {
+        let image = image.lock().unwrap();
+        let image_ref = image.as_ref();
+        tracing::debug!("Image has been set: {}", image_ref.is_some());
+        image.as_ref().map(|i| {
+            tracing::debug!("Saving image...");
+            i.save("output.png").unwrap();
+            tracing::debug!("Done!");
         });
     });
 
