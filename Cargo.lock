@@ -1737,6 +1737,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 
 [[package]]
+name = "kiraz"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "image",
+ "slint",
+ "structopt",
+ "thiserror",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "kurbo"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3123,19 +3136,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dabb3eb59a457c56d5282ab4545609e2cc382b41f6af239bb8d59a7267ef94b3"
 dependencies = [
  "siphasher 0.3.10",
-]
-
-[[package]]
-name = "swappers"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "image",
- "slint",
- "structopt",
- "thiserror",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]

@@ -16,7 +16,7 @@ slint::slint! {
         property <image> display_image;
         property <string> file_name;
 
-         title: file_name + " (" + display_image.width + "px x " + display_image.height + "px) - swappers";
+         title: file_name + " (" + display_image.width + "px x " + display_image.height + "px) - kiraz";
 
         VerticalLayout {
             width: 1024px;
@@ -33,7 +33,7 @@ slint::slint! {
 
 /// Sets up the logging. Only call this once, at the start.
 fn setup_logging() -> () {
-    let env_filter = EnvFilter::try_from_env("SWAPPERS_LOG_LEVEL").unwrap_or_else(|_| EnvFilter::new("warn"));
+    let env_filter = EnvFilter::try_from_env("KIRAZ_LOG_LEVEL").unwrap_or_else(|_| EnvFilter::new("warn"));
     let subscriber = tracing_subscriber::fmt::fmt().with_env_filter(env_filter).finish();
     tracing::subscriber::set_global_default(subscriber).expect("Failed to set up logging");
 }
@@ -63,6 +63,7 @@ fn main() -> anyhow::Result<()> {
     let image_reader = image::io::Reader::new(&mut image_data_cursor).with_guessed_format()?;
     tracing::debug!("Found {:?} format", image_reader.format());
     let image = image_reader.decode()?.to_rgba8();
+    tracing::debug!("Image is {} by {} pixels", image.width(), image.height());
     let buffer = SharedPixelBuffer::<Rgba8Pixel>::clone_from_slice(image.as_bytes(), image.width(), image.height());
 
     // Create the window, set the image, and start the UI
