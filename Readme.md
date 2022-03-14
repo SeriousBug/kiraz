@@ -13,9 +13,20 @@ Supported image formats:
 - TGA
 
 Supported targets:
-- Save to a file (TODO)
-- Upload to imgur (TODO)
-- Upload to B2 (TODO)
-- Upload to S3 (TODO)
-- Upload to Google Drive (TODO)
-- Run custom scripts (TODO)
+- [ ] Save to a file
+- [ ] Save to clipboard
+- [ ] Upload to imgur
+- [ ] Upload to B2
+- [ ] Upload to S3
+- [ ] Upload to Google Drive
+- [ ] Run custom scripts
+
+
+## Debugging
+
+Run kiraz with the environment variable `KIRAZ_LOG_LEVEL=debug` to see the debug
+output.
+
+```bash
+env KIRAZ_LOG_LEVEL=debug kiraz image.png
+```

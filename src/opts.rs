@@ -9,9 +9,9 @@ use structopt::StructOpt;
 /// To open a file:
 ///   kiraz my-image.png
 /// Screenshot the whole desktop with grim:
-///   grim | kiraz -
-/// Screenshot a single desktop with grim and slurp:
-///   grim -g (slurp) | kiraz -
+///   grim - | kiraz -
+/// Screenshot a selected region with grim and slurp:
+///   grim -g (slurp) - | kiraz -
 pub struct Opts {
   /// The file to open. Use - to read from stdin when piping.
   pub file: std::path::PathBuf,
