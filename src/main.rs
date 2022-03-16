@@ -11,30 +11,36 @@ use tracing_subscriber::EnvFilter;
 use crate::opts::Opts;
 
 slint::slint! {
-    import { Button } from "std-widgets.slint";
+    import { Button, LineEdit } from "std-widgets.slint";
 
     MainWindow := Window {
         property <bool> loading;
         property <image> display_image;
         property <string> file_name;
 
-        callback save_to_file;
+        callback save_to_file(string);
 
         title: (loading ? "Loading..." : (file_name + " (" + display_image.width + "px x " + display_image.height + "px)")) + " - kiraz";
+        preferred_width: 800px;
+        preferred_height: 800px;
 
         VerticalLayout {
-            width: 1024px;
+            padding: 8px;
 
             Image {
                 source: display_image;
-                width: parent.width;
-                height: 768px;
+                preferred_height: 768px;
                 image_fit: contain;
             }
             HorizontalLayout {
+                height: 32px;
+
+                FilePath := LineEdit {
+                    placeholder_text: "Path to save the file at";
+                }
                 Button {
                     text: "Save to file";
-                    clicked => { save_to_file(); }
+                    clicked => { save_to_file(FilePath.text); }
                 }
             }
         }
@@ -110,14 +116,17 @@ fn main() -> anyhow::Result<()> {
         });
     });
 
-    window.on_save_to_file(move || {
-        let image = image.lock().unwrap();
-        let image_ref = image.as_ref();
-        tracing::debug!("Image has been set: {}", image_ref.is_some());
-        image.as_ref().map(|i| {
-            tracing::debug!("Saving image...");
-            i.save("output.png").unwrap();
-            tracing::debug!("Done!");
+    window.on_save_to_file(move |path| {
+        let image = image.clone();
+        // Save the image to a file in a background thread
+        thread::spawn(move || {
+            let image = image.lock().unwrap();
+            tracing::debug!("Image has been set: {}", image.is_some());
+            image.as_ref().map(|image| {
+                tracing::debug!("Saving image...");
+                image.save(path.as_str()).unwrap();
+                tracing::debug!("Done!");
+            });
         });
     });
 
