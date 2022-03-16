@@ -7,6 +7,7 @@ use slint::{Image, Rgba8Pixel, SharedPixelBuffer, SharedString};
 use structopt::StructOpt;
 use tracing;
 use tracing_subscriber::EnvFilter;
+use shellexpand;
 
 use crate::opts::Opts;
 
@@ -124,6 +125,16 @@ fn main() -> anyhow::Result<()> {
             tracing::debug!("Image has been set: {}", image.is_some());
             image.as_ref().map(|image| {
                 tracing::debug!("Saving image...");
+                let target_path = shellexpand::full(path.as_str());
+                match target_path {
+                    Ok(target_path) => {
+                        tracing::debug!("Saving to path {}", &target_path);
+                        image.save(target_path.as_ref()).unwrap();
+                    },
+                    Err(err) => {
+                        tracing::error!("Failed to calculate the path to save to: {:?}", err);
+                    },
+                }
                 image.save(path.as_str()).unwrap();
                 tracing::debug!("Done!");
             });

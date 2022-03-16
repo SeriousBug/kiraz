@@ -19,6 +19,7 @@
           "kind": "bin"
         }
       },
+      "env": {"KIRAZ_LOG_LEVEL": "debug"},
       "args": ["example.png"],
       "cwd": "${workspaceFolder}"
     },
